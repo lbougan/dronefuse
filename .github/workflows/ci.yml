@@ -16,3 +16,8 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run ruff check .
       - run: uv run pytest --cov=dronefuse --cov-fail-under=80
+      - run: uv run dronefuse run --scenario figure8 --estimator all --seed 0 --dropout 30:35 --out out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plots
+          path: out/
