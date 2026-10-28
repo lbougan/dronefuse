@@ -1,6 +1,6 @@
 [project]
 name = "dronefuse"
-version = "0.1.0"
+version = "1.0.0"
 description = "State estimation and sensor fusion (dead reckoning, KF, error-state EKF) for a simulated quadrotor"
 readme = "README.md"
 requires-python = ">=3.12"
