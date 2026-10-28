@@ -8,15 +8,15 @@ Figure-eight, 60 s, seed 0, position fixes dropped between 30 s and 35 s (grey b
 
 | Estimator | Pos RMSE [m] | Vel RMSE [m/s] | Max pos err [m] | Mean NEES (ideal 6) | NEES in 95 % bounds |
 |---|---:|---:|---:|---:|---:|
-| DR | 151.617 | 7.304 | 358.71 | n/a | n/a |
-| KF | 1.200 | 0.879 | 8.11 | 3.01 | 82.5 % |
-| EKF | 0.218 | 0.135 | 0.58 | 5.25 | 96.0 % |
+| DR | 139.205 | 5.479 | 293.93 | n/a | n/a |
+| KF | 1.200 | 0.880 | 8.11 | 3.01 | 83.0 % |
+| EKF | 0.229 | 0.151 | 0.74 | 5.58 | 93.7 % |
 
-- The EKF's position error is about **700× lower** than dead reckoning and 5× lower than the linear KF.
+- The EKF's position error is about **600× lower** than dead reckoning and 5× lower than the linear KF.
 - Its uncertainty is **honest**: the NEES (normalised estimation error squared, `eᵀ P⁻¹ e`) has a mean close to the ideal 6 and stays inside the 95 % chi-square band. A filter that is merely confident fails this test; the linear KF does.
-- During the 5 s dropout the error grows smoothly to 0.58 m and is back under 0.5 m at the **first fix** after it returns.
+- During the 5 s dropout the error grows smoothly to 0.74 m and is back under 0.5 m at the **first fix** after it returns.
 
-Without the dropout (the acceptance case in `tests/test_acceptance.py`) the EKF reaches 0.204 m RMSE. Its NEES fraction for seed 0 alone is 87.8 %; over seeds 0–7 it averages 94.2 % with mean NEES 5.85, which is why the consistency test pools several seeds instead of tuning the filter to one.
+Without the dropout (the acceptance case in `tests/test_acceptance.py`) the EKF reaches 0.215 m RMSE. Its NEES fraction for seed 0 alone is 87.5 %; over seeds 0–7 it ranges from 82 % to 99 % and averages 93.6 % with mean NEES 6.07, which is why the consistency test pools seeds 0–4 instead of tuning the filter to one realisation.
 
 ## Quick start
 
@@ -72,7 +72,7 @@ The EKF's `Q`, `R` and `P0` are built from the simulator's own noise numbers. Th
 
 ## Not modelled
 
-Magnetometer, barometer or airspeed; vehicle dynamics, aerodynamics or a controller; IMU scale factors, misalignment, lever arm and time offsets; Earth rotation; fix outliers; real-time constraints. Yaw is observable only through horizontal acceleration, so on hover the yaw uncertainty grows, which is correct. Integration is first order with the IMU sample held over the 5 ms step. See [docs/design.md](docs/design.md) for the full list and the numbers.
+Magnetometer, barometer or airspeed; vehicle dynamics, aerodynamics or a controller; IMU scale factors, misalignment, lever arm and time offsets; Earth rotation; fix outliers; real-time constraints. Yaw is observable only through horizontal acceleration, so on hover the yaw uncertainty grows, which is correct. Integration is first order with the IMU sample held over the 5 ms step.
 
 ## Layout
 
@@ -93,7 +93,6 @@ dronefuse/
   plots.py  cli.py
 tests/                 unit tests per module + SPEC §4 acceptance tests
 notebooks/walkthrough  raw sensors → DR drift → KF → EKF, step by step
-docs/design.md         models, noise parameters, decisions, limitations
 ```
 
 numpy + scipy + matplotlib only; the full run takes about 3 s.

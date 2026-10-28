@@ -98,7 +98,7 @@ plt.show()
 
 # %%
 sensor_cfg = SensorConfig(dropouts=(DROPOUT,))
-init = perturbed_initial_state(truth, InitConfig(), seed=1)
+init = perturbed_initial_state(truth, InitConfig(), seed=0)
 ekf = make_estimator("ekf", init, sensor_cfg, InitConfig())
 est_bias = np.empty((len(log), 3))
 for i in range(len(log)):

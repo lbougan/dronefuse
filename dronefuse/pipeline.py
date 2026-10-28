@@ -18,8 +18,6 @@ from dronefuse.simulate import (
     simulate_sensors,
 )
 
-INIT_SEED_OFFSET = 1  # initial-state perturbation uses its own RNG stream
-
 
 @dataclass(frozen=True)
 class RunResult:
@@ -44,14 +42,20 @@ def run_pipeline(
 ) -> RunResult:
     """Run every named estimator over the same seeded sensor log and evaluate each.
 
-    `overrides` maps an estimator name to config-field overrides (see make_estimator).
+    `overrides` maps an estimator name to config-field overrides (see make_estimator); every
+    key must name one of `estimator_names`. `dropouts`, when given, replace those of sensor_cfg.
     """
-    sensor_cfg = replace(sensor_cfg or SensorConfig(), dropouts=tuple(dropouts))
+    sensor_cfg = sensor_cfg or SensorConfig()
+    if dropouts:
+        sensor_cfg = replace(sensor_cfg, dropouts=tuple(dropouts))
     init_cfg = init_cfg or InitConfig()
     overrides = overrides or {}
+    unused = set(overrides) - set(estimator_names)
+    if unused:
+        raise ValueError(f"overrides for estimators that are not run: {sorted(unused)}")
     truth = sample_truth(make_scenario(scenario_name), duration, sensor_cfg.imu_rate_hz)
     log = simulate_sensors(truth, sensor_cfg, seed)
-    init = perturbed_initial_state(truth, init_cfg, seed + INIT_SEED_OFFSET)
+    init = perturbed_initial_state(truth, init_cfg, seed)
     trajectories = {
         name: run_estimator(
             make_estimator(name, init, sensor_cfg, init_cfg, overrides.get(name)), log

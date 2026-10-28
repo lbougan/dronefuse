@@ -11,7 +11,7 @@ from dronefuse.sensors import ImuSample, PosSample
 
 @dataclass(frozen=True)
 class KfConfig:
-    accel_noise_std: float = 1.0  # m/s^2/sqrt(s), continuous white-noise acceleration PSD
+    accel_noise_std: float = 1.0  # m/s^2 * sqrt(s): sqrt of the white-noise acceleration PSD
     pos_meas_std: float = 0.3  # m
     pos_std0: float = 0.5  # m
     vel_std0: float = 0.1  # m/s
@@ -49,6 +49,10 @@ class LinearKF:
         K, P_new = joseph_update(self._P, H, R)
         self._x = self._x + K @ (fix.pos - H @ self._x)
         self._P = P_new
+
+    @property
+    def config(self) -> KfConfig:
+        return self._cfg
 
     @property
     def estimate(self) -> Estimate:

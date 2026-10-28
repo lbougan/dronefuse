@@ -30,3 +30,8 @@ def test_run_pipeline_passes_dropouts_to_sensors() -> None:
     assert r.dropouts == ((1.0, 2.0),)
     assert r.log.fix_at(200) is None  # t = 1.0
     assert r.log.fix_at(400) is not None  # t = 2.0
+
+
+def test_run_pipeline_keeps_sensor_config_dropouts_when_none_given() -> None:
+    r = run_pipeline("line", ["dr"], duration=3.0, sensor_cfg=SensorConfig(dropouts=((1.0, 2.0),)))
+    assert r.dropouts == ((1.0, 2.0),)

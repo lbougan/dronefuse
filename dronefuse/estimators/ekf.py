@@ -151,9 +151,13 @@ class ErrorStateEKF:
         return self._x
 
     @property
+    def config(self) -> EkfConfig:
+        return self._cfg
+
+    @property
     def covariance(self) -> np.ndarray:
-        """Full 15x15 error-state covariance."""
-        return self._P
+        """Full 15x15 error-state covariance (a copy)."""
+        return self._P.copy()
 
     def predict(self, imu: ImuSample, dt: float) -> None:
         F = transition_jacobian(self._x, imu, dt)

@@ -9,6 +9,8 @@ from dronefuse.estimators.base import Estimator, InitConfig, InitialState
 from dronefuse.scenario import Scenario, TrueState
 from dronefuse.sensors import ImuSample, PosSample, SensorConfig, SensorSim
 
+INIT_STREAM = 1  # second word of the RNG seed, so the initial error never reuses a sensor stream
+
 
 @dataclass(frozen=True)
 class Truth:
@@ -112,8 +114,11 @@ def simulate_sensors(truth: Truth, cfg: SensorConfig, seed: int) -> SensorLog:
 
 
 def perturbed_initial_state(truth: Truth, cfg: InitConfig, seed: int) -> InitialState:
-    """Truth at t=0 plus a Gaussian error drawn from InitConfig, so P0 is honest."""
-    rng = np.random.default_rng(seed)
+    """Truth at t=0 plus a Gaussian error drawn from InitConfig, so P0 is honest.
+
+    Uses the stream (seed, INIT_STREAM), independent of the sensor stream (seed,) of any run.
+    """
+    rng = np.random.default_rng([seed, INIT_STREAM])
     dtheta = rng.normal(0.0, cfg.att_std, 3)
     return InitialState(
         pos=truth.pos[0] + rng.normal(0.0, cfg.pos_std, 3),

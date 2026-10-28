@@ -14,9 +14,11 @@ INIT = InitialState(pos=np.zeros(3), vel=np.zeros(3), quat=np.array([1.0, 0.0, 0
 def test_make_estimator_applies_overrides() -> None:
     ekf = make_estimator("ekf", INIT, SensorConfig(), InitConfig(), {"pos_meas_std": 9.0})
     assert isinstance(ekf, ErrorStateEKF)
-    assert ekf._cfg.pos_meas_std == 9.0
-    with pytest.raises(TypeError):
+    assert ekf.config.pos_meas_std == 9.0
+    with pytest.raises(ValueError, match="no field"):
         make_estimator("kf", INIT, SensorConfig(), InitConfig(), {"no_such_field": 1.0})
+    with pytest.raises(ValueError, match="no config"):
+        make_estimator("dr", INIT, SensorConfig(), InitConfig(), {"pos_meas_std": 1.0})
 
 
 def test_run_pipeline_overrides_change_only_that_filter() -> None:
@@ -26,6 +28,8 @@ def test_run_pipeline_overrides_change_only_that_filter() -> None:
     )
     np.testing.assert_array_equal(base.trajectories["kf"].pos, tuned.trajectories["kf"].pos)
     assert not np.array_equal(base.trajectories["ekf"].pos, tuned.trajectories["ekf"].pos)
+    with pytest.raises(ValueError, match="not run"):
+        run_pipeline("hover", ["kf"], duration=1.0, overrides={"ekf": {"pos_meas_std": 3.0}})
 
 
 def test_knob_parse_and_default() -> None:
@@ -35,6 +39,18 @@ def test_knob_parse_and_default() -> None:
         Knob.parse("accel_noise_std")
     with pytest.raises(ValueError, match="no field"):
         Knob.parse("kf.bogus").default(SensorConfig(), InitConfig())
+    with pytest.raises(ValueError, match="not numeric"):
+        Knob.parse("sensor.dropouts").default(SensorConfig(), InitConfig())
+
+
+def test_sweep_rejects_filter_knob_for_estimator_not_run() -> None:
+    with pytest.raises(ValueError, match="not among the estimators"):
+        sweep(Knob.parse("kf.accel_noise_std"), [1.0], ["ekf"], scenario="hover", duration=1.0)
+
+
+def test_init_config_rejects_non_positive_std() -> None:
+    with pytest.raises(ValueError, match="must be > 0"):
+        InitConfig(pos_std=0.0)
 
 
 def test_sweep_scaled_values_and_table() -> None:

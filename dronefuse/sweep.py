@@ -46,7 +46,10 @@ class Knob:
         }[self.target]
         if self.field not in {f.name for f in fields(cfg)}:
             raise ValueError(f"{type(cfg).__name__} has no field {self.field!r}")
-        return float(getattr(cfg, self.field))
+        value = getattr(cfg, self.field)
+        if not isinstance(value, int | float):
+            raise ValueError(f"knob {self.target}.{self.field} is not numeric ({value!r})")
+        return float(value)
 
 
 @dataclass(frozen=True)
@@ -93,6 +96,11 @@ def sweep(
 
     With scale=True the values multiply the knob's default instead of replacing it.
     """
+    if knob.target in FILTER_TARGETS and knob.target not in estimator_names:
+        raise ValueError(
+            f"knob {knob.target}.{knob.field} targets {knob.target!r}, "
+            f"which is not among the estimators run {list(estimator_names)}"
+        )
     base_sensor, base_init = SensorConfig(), InitConfig()
     default = knob.default(base_sensor, base_init)
     rows: list[SweepRow] = []

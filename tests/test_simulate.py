@@ -92,6 +92,10 @@ def test_perturbed_initial_state_is_seeded_and_off_truth() -> None:
     a = perturbed_initial_state(truth, InitConfig(), seed=1)
     b = perturbed_initial_state(truth, InitConfig(), seed=1)
     np.testing.assert_array_equal(a.pos, b.pos)
+    # Independent of every sensor stream: the draw must not equal seed 2's sensor bias draw.
+    assert not np.allclose(
+        a.pos - truth.pos[0], np.random.default_rng(2).normal(0.0, InitConfig().pos_std, 3)
+    )
     assert np.linalg.norm(a.pos - truth.pos[0]) > 0.0
     assert np.isclose(np.linalg.norm(a.quat), 1.0)
     att_err = quat.to_rotation_vector(quat.multiply(quat.conjugate(truth.quat[0]), a.quat))

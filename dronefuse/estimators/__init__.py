@@ -1,7 +1,7 @@
 """Estimators sharing the predict/update/estimate interface."""
 
 from collections.abc import Mapping
-from dataclasses import replace
+from dataclasses import fields, replace
 
 from dronefuse.estimators.base import Estimator, InitConfig, InitialState
 from dronefuse.estimators.dead_reckoning import DeadReckoning
@@ -45,7 +45,12 @@ def make_estimator(
     derived defaults; this is how `dronefuse sweep` tunes a filter without touching the sensors.
     """
     cfg = default_config(name, sensor_cfg, init_cfg)
-    if cfg is not None and overrides:
+    if overrides:
+        if cfg is None:
+            raise ValueError(f"estimator {name!r} has no config to override")
+        unknown = set(overrides) - {f.name for f in fields(cfg)}
+        if unknown:
+            raise ValueError(f"{type(cfg).__name__} has no field(s) {sorted(unknown)}")
         cfg = replace(cfg, **dict(overrides))
     if name == DeadReckoning.name:
         return DeadReckoning(init)

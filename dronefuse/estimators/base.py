@@ -23,6 +23,11 @@ class InitConfig:
     vel_std: float = 0.1  # m/s
     att_std: float = 0.02  # rad
 
+    def __post_init__(self) -> None:
+        for name in ("pos_std", "vel_std", "att_std"):
+            if getattr(self, name) <= 0:
+                raise ValueError(f"InitConfig.{name} must be > 0 (P0 must be invertible)")
+
 
 @dataclass(frozen=True)
 class Estimate:
