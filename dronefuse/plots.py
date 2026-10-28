@@ -127,7 +127,7 @@ def plot_nees(
     ax.set_xlabel("time [s]")
     ax.set_ylabel("NEES (pos + vel)")
     ax.set_title("Filter consistency: NEES")
-    ax.legend(loc="upper right", fontsize=8)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.22), ncol=5, fontsize=8, frameon=False)
     _style(ax)
     fig.tight_layout()
     fig.savefig(path, dpi=_DPI)
