@@ -3,16 +3,12 @@
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
 
-matplotlib.use("Agg")
-
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-
-from dronefuse.metrics import NEES_DOF, chi2_bounds  # noqa: E402
-from dronefuse.pipeline import RunResult  # noqa: E402
-from dronefuse.simulate import EstimateTrajectory, Truth  # noqa: E402
+from dronefuse.metrics import NEES_DOF, chi2_bounds
+from dronefuse.pipeline import RunResult
+from dronefuse.simulate import EstimateTrajectory, Truth
 
 Dropouts = Sequence[tuple[float, float]]
 
