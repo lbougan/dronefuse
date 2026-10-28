@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="400" viewBox="0 0 920 400" font-family="Helvetica, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#52514e"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#2a78d6"/>
+    </marker>
+  </defs>
+  <style>
+    .box { fill: #ffffff; stroke: #52514e; stroke-width: 1.2; rx: 6; }
+    .loop { fill: #eef4fc; stroke: #2a78d6; stroke-width: 1.5; rx: 6; }
+    .title { font-weight: bold; fill: #0b0b0b; }
+    .eq { font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; font-size: 12px; fill: #0b0b0b; }
+    .note { fill: #52514e; font-size: 11.5px; }
+    .edge { stroke: #52514e; stroke-width: 1.3; fill: none; marker-end: url(#arrow); }
+    .edge-blue { stroke: #2a78d6; stroke-width: 1.6; fill: none; marker-end: url(#arrow-blue); }
+  </style>
+
+  <!-- Truth -->
+  <rect class="box" x="20" y="30" width="190" height="64"/>
+  <text class="title" x="32" y="52">Scenario (analytic truth)</text>
+  <text class="note" x="32" y="70">hover · line · figure-eight</text>
+  <text class="note" x="32" y="86">p, v, a, q, ω at 200 Hz</text>
+
+  <path class="edge" d="M 115 94 L 115 128"/>
+
+  <!-- Sensors -->
+  <rect class="box" x="20" y="130" width="190" height="112"/>
+  <text class="title" x="32" y="152">Sensor simulator (seeded)</text>
+  <text class="eq" x="32" y="172">a_m = Rᵀ(a − g) + b_a + n</text>
+  <text class="eq" x="32" y="190">ω_m = ω + b_g + n</text>
+  <text class="eq" x="32" y="208">z = p + n</text>
+  <text class="note" x="32" y="226">IMU 200 Hz · fix 5 Hz, with dropouts</text>
+
+  <!-- Loop container -->
+  <rect x="250" y="18" width="430" height="340" fill="none" stroke="#2a78d6" stroke-width="1" stroke-dasharray="3 4" rx="10"/>
+  <text class="note" x="262" y="36" fill="#2a78d6">estimator loop, one iteration per IMU sample (Δt = 5 ms)</text>
+
+  <!-- Predict -->
+  <rect class="loop" x="270" y="50" width="380" height="118"/>
+  <text class="title" x="284" y="72">Predict with the IMU sample</text>
+  <text class="eq" x="284" y="94">p ← p + v Δt + ½ (R(q)(a_m − b_a) + g) Δt²</text>
+  <text class="eq" x="284" y="112">v ← v + (R(q)(a_m − b_a) + g) Δt</text>
+  <text class="eq" x="284" y="130">q ← q ⊗ Exp((ω_m − b_g) Δt)</text>
+  <text class="eq" x="284" y="148">P ← F P Fᵀ + Q</text>
+  <text class="note" x="284" y="162">(biases held constant; F = Solà eq. 270)</text>
+
+  <!-- IMU edge: sensors -> predict -->
+  <path class="edge" d="M 210 178 L 240 178 L 240 110 L 268 110"/>
+  <text class="note" x="214" y="104">IMU</text>
+
+  <!-- Predict -> Update -->
+  <path class="edge-blue" d="M 460 168 L 460 208"/>
+  <text class="note" x="468" y="186">fix at this step? (every 40th sample)</text>
+  <text class="note" x="468" y="200">otherwise skip the update</text>
+
+  <!-- Update -->
+  <rect class="loop" x="270" y="210" width="380" height="118"/>
+  <text class="title" x="284" y="232">Update with the position fix</text>
+  <text class="eq" x="284" y="254">K = P Hᵀ (H P Hᵀ + R)⁻¹,   H = [I 0 0 0 0]</text>
+  <text class="eq" x="284" y="272">δx = K (z − p)</text>
+  <text class="eq" x="284" y="290">x ← x ⊕ δx   (q ← q ⊗ Exp(δθ))</text>
+  <text class="eq" x="284" y="308">P ← (I − KH) P (I − KH)ᵀ + K R Kᵀ</text>
+  <text class="note" x="284" y="322">then reset the attitude block of P</text>
+
+  <!-- Fix edge: sensors -> update -->
+  <path class="edge" d="M 210 200 L 240 200 L 240 272 L 268 272"/>
+  <text class="note" x="214" y="286">fix</text>
+
+  <!-- Loop back: update -> predict (next sample) -->
+  <path class="edge-blue" d="M 650 269 L 664 269 L 664 110 L 652 110"/>
+  <text class="note" x="676" y="200" transform="rotate(-90 676 200)" text-anchor="middle">next IMU sample</text>
+
+  <!-- Estimate -->
+  <rect class="box" x="700" y="50" width="200" height="84"/>
+  <text class="title" x="712" y="72">Estimate after each step</text>
+  <text class="eq" x="712" y="94">x = [p, v, q, b_a, b_g]</text>
+  <text class="eq" x="712" y="112">P   (15 × 15 error-state)</text>
+  <text class="note" x="712" y="128">recorded at every IMU step</text>
+
+  <path class="edge" d="M 680 92 L 698 92"/>
+
+  <!-- Metrics -->
+  <rect class="box" x="700" y="190" width="200" height="110"/>
+  <text class="title" x="712" y="212">Metrics against truth</text>
+  <text class="note" x="712" y="232">RMSE of p and v</text>
+  <text class="eq" x="712" y="252">NEES = eᵀ P⁻¹ e  vs  χ²₆</text>
+  <text class="note" x="712" y="270">(ideal mean 6, 95 % band)</text>
+  <text class="note" x="712" y="288">recovery time after dropout</text>
+
+  <path class="edge" d="M 800 134 L 800 188"/>
+
+  <!-- truth edge to metrics -->
+  <path class="edge" d="M 115 242 L 115 378 L 800 378 L 800 302"/>
+  <text class="note" x="420" y="372">ground truth, same 200 Hz grid</text>
+</svg>
